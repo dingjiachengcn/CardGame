@@ -26,15 +26,18 @@ public class ClientGame {
         boolean gameOver = false; // 游戏是否结束的标志
 
         while (!gameOver) { // 当游戏未结束时
-            System.out.println("Your remaining cards: " + remainingCards); // 显示玩家剩余的牌
             try {
                 String message = in.readLine(); // 从服务器读取一条消息
 
                 if (message.startsWith("Round ")) { // 如果消息是新的一轮开始
                     System.out.println(message); // 显示消息
+                } else if (message.startsWith("Server card: ")) { // 如果消息是服务器出示的卡牌
+                    System.out.println(message); // 显示消息
+                    System.out.println("Your remaining cards: " + remainingCards); // 显示玩家剩余的牌
+
                     int cardValue; // 玩家选择的牌的值
                     while (true) {
-                        System.out.print("Enter the value of the card you want to play " + remainingCards + ": "); // 提示用户输入
+                        System.out.print("Enter the value of the card you want to play: "); // 提示用户输入
                         cardValue = userInput.nextInt(); // 读取用户输入的牌值
 
                         if (remainingCards.contains(cardValue)) { // 如果输入的牌值在剩余的牌中
@@ -66,6 +69,11 @@ public class ClientGame {
             }
         }
     }
+
+
+
+
+
 
     public static void main(String[] args) {
         try {

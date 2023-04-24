@@ -17,6 +17,7 @@ public class Client1 {
 
             for (int roundNumber = 1; roundNumber <= 13; roundNumber++) {
                 System.out.println(in.readLine()); // 从服务器读取回合数
+                System.out.println(in.readLine()); // 从服务器读取服务器牌的值
                 System.out.print("Enter the value of the card you want to play [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]: ");
                 int cardValue = scanner.nextInt(); // 读取用户输入的牌值
                 out.println(cardValue); // 向服务器发送牌值

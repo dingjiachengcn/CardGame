@@ -51,11 +51,6 @@ public class ServerGame {
     public void playGame() {
         for (int roundNumber = 1; roundNumber <= 13; roundNumber++) {
             playRound(roundNumber); // 播放指定回合数的游戏
-
-            for (ClientHandler clientHandler : clientHandlers) {
-                clientHandler.send("Round " + roundNumber); // 向每个客户端发送回合信息
-            }
-           // playRound(roundNumber); // 播放指定回合数的游戏
         }
 
         // 游戏循环结束后
@@ -70,11 +65,17 @@ public class ServerGame {
             clientHandler.send("Final winners: " + winners); // 向每个客户端发送最终赢家信息
         }
     }
-
     private void playRound(int roundNumber) {
         System.out.println("Round " + roundNumber); // 输出当前回合数信息
         for (ClientHandler clientHandler : clientHandlers) {
             clientHandler.send("Round " + roundNumber); // 向每个客户端发送当前回合数信息
+        }
+
+// 在这里调用 drawCardFromServerDeck 并发送给客户端
+        int serverCardValue = drawCardFromServerDeck();
+        System.out.println("Server card: " + serverCardValue);
+        for (ClientHandler clientHandler : clientHandlers) {
+            clientHandler.send("Server card: " + serverCardValue);
         }
 
         // 获取客户端出的牌
@@ -84,17 +85,17 @@ public class ServerGame {
             playedCards.put(clientHandler.getClientNumber(), playedCard); // 将客户端号和牌值存入playedCards映射中
         }
 
-        // 判断回合获胜者
-        int maxCardValue = Collections.max(playedCards.values()); // 获取最大的牌值
+        // 修改得分计算方式：得分是服务器端出示的这张牌的值
+        int maxCardValue = Collections.max(playedCards.values());
         Set<Integer> roundWinners = playedCards.entrySet().stream()
-                .filter(entry -> entry.getValue() == maxCardValue) // 筛选出牌值最大的客户端
-                .map(Map.Entry::getKey) // 提取客户端编号
-                .collect(Collectors.toSet()); // 将客户端编号存入集合中
-        updateScores(roundWinners, maxCardValue); // 更新回合获胜者的得分
+                .filter(entry -> entry.getValue() == maxCardValue)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet());
+        updateScores(roundWinners, serverCardValue);
 
-        System.out.println("Round " + roundNumber + " winners: " + roundWinners); // 输出回合获胜者信息
+        System.out.println("Round " + roundNumber + " winners: " + roundWinners);
         for(ClientHandler clientHandler : clientHandlers) {
-            clientHandler.send("Round " + roundNumber + " winners: " + roundWinners); // 向每个客户端发送回合获胜者信息
+            clientHandler.send("Round " + roundNumber + " winners: " + roundWinners);
         }
 
         // 更新客户端的剩余牌
@@ -115,10 +116,23 @@ public class ServerGame {
             clientHandler.send("Your score: " + score); // 向客户端发送得分信息
             clientHandler.send("Your remaining cards: " + remainingCards); // 向客户端发送剩余牌信息
         }
+
+        for (ClientHandler clientHandler : clientHandlers) {
+            clientHandler.send("All scores: " + scores); // 向每个客户端发送所有客户端的分数
+        }
+        System.out    .println("Round " + roundNumber + " scores: " + scores);
+    }
+    private int drawCardFromServerDeck() {
+        if (serverCards.isEmpty()) {
+            return -1;
+        }
+
+        Card drawnCard = serverCards.remove(0);
+        return drawnCard.getValue();
     }
 
-    private void updateScores(Set<Integer> roundWinners, int maxCardValue) {
-        int points = maxCardValue - 1; // 计算得分（最大牌值减1）
+    private void updateScores(Set<Integer> roundWinners, int serverCardValue) {
+        int points = serverCardValue; // 计算得分（服务器发的牌的值）
         for (int winner : roundWinners) {
             int updatedScore = scores.get(winner) + points; // 更新回合获胜者的得分
             scores.put(winner, updatedScore); // 将更新后的得分存入得分映射中
